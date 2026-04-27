@@ -1,0 +1,11 @@
+# Byte‑code
+*.pyc
+__pycache__/
+
+# Entorno virtual
+venv/
+.env
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
