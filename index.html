@@ -1,0 +1,44 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Alexan – grabar audio</title>
+</head>
+<body>
+    <h1>Alexan – grabar audio y recibir respuesta</h1>
+    <button id="startBtn">🎙️ Iniciar grabación</button>
+    <button id="stopBtn" disabled>⏹️ Detener</button>
+    <p id="status">Estado: <span>esperando</span></p>
+    <pre id="out"></pre>
+
+    <script>
+      const startBtn = document.getElementById('startBtn');
+      const stopBtn = document.getElementById('stopBtn');
+      const status = document.getElementById('status').querySelector('span');
+      const out = document.getElementById('out');
+      let rec, chunks = [];
+
+      startBtn.onclick = async () => {
+          status.textContent = 'pidiendo permiso…';
+          const stream = await navigator.mediaDevices.getUserMedia({ audio:true });
+          rec = new MediaRecorder(stream);
+          rec.addEventListener('dataavailable', e=>chunks.push(e.data));
+          rec.addEventListener('stop', async () => {
+              const blob = new Blob(chunks, {type:'audio/wav'});
+              const form = new FormData();
+              form.append('file', blob, 'audio.wav');
+              status.textContent='enviando…';
+              const resp = await fetch('/voice', {method:'POST',body:form});
+              const data = await resp.json();
+              out.textContent = JSON.stringify(data, null, 2);
+              status.textContent='listo';
+              chunks=[];
+          });
+          rec.start();
+          startBtn.disabled=true; stopBtn.disabled=false; status.textContent='grabando…';
+      };
+
+      stopBtn.onclick = () => { rec.stop(); startBtn.disabled=false; stopBtn.disabled=true; };
+    </script>
+</body>
+</html>
